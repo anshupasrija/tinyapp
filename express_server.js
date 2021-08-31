@@ -34,7 +34,7 @@ app.get("/urls.json", (req, res) => {
 
 app.get("/hello", (req, res) => {
   const templateVars = { greeting: "Hello World!" };
-  res.render("hello_world", templateVars);
+  res.send("hello_world", templateVars);
 });
 
 app.get("/urls", (req, res) => {
@@ -71,6 +71,13 @@ app.get("/u/:shortURL", (req, res) => {
   
   res.redirect(longURL);
 });
+
+app.post("/urls/:shortURL/delete",(req,res)=>{
+  console.log("shorturl",req.params.shortURL)
+  shortURL=req.params.shortURL;
+  delete urlDatabase[shortURL];
+  res.redirect("/urls");
+})
 
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);

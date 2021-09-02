@@ -42,17 +42,27 @@ function generateRandomString() {
   }
   return result;
 }
-app.get("/", (req, res) => {
-  res.send("Hello");
-});
+// app.get("/", (req, res) => {
+//   if (!isLoggedIn(req)) {
+//     res.redirect('/urls');
+//   }
+//   else{    
+//     res.redirect('/login'); 
+//   }
+//   });
+
 
 
 app.get("/urls", (req, res) => {
-  const user_id =req.cookies["user_id"];
+  const user_id = req.cookies["user_id"];
   const user = users[user_id];
-  const templateVars = { urls: urlDatabase,  user };
-  // console.log("res cookie",req.cookies["username"]);
-  res.render("urls_index", templateVars);
+  // if (isLoggedIn(req)) {
+    const templateVars = { urls: urlDatabase, user };
+    // console.log("res cookie",req.cookies["username"]);
+    res.render("urls_index", templateVars);
+  // } else{
+  // return res.redirect("/login");
+  // }
 });
 
 app.get("/urls/new", (req, res) => {
@@ -74,18 +84,26 @@ app.get("/urls/:shortURL", (req, res) => {
 
 app.post("/urls", (req, res) => {
   console.log(req.body); 
+  if (isLoggedIn(req)) {
   const shortURL = generateRandomString();
   urlDatabase[shortURL]={longURL: req.body.longURL, user:req.cookies["user_id"]};
   // console.log(urlDatabase);
   res.redirect("/urls/"+shortURL);
+  }
+  else { 
+    return res.send('User is not logged in:-')
+  }
 });
 
 app.get("/u/:shortURL", (req, res) => {
-  const shortURL=req.params.shortURL;
-  const longURL = urlDatabase[shortURL];
-  // console.log("long url",longURL);
-  
-  res.redirect(longURL);
+  const shortURL = req.params.shortURL;
+  if (shortURL in urlDatabase) {
+    const longURL = urlDatabase[shortURL].longURL;
+    console.log("long url", longURL);
+    res.redirect(longURL);
+  } else {
+    res.send("Short url doen't exist");
+  }
 });
 
 app.post("/urls/:shortURL/delete",(req,res)=>{

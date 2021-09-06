@@ -49,14 +49,16 @@ const urlsForUser = function (id) {
 };
 
 
-
-
+app.get("/", (req, res) => {
+  res.redirect("/login");
+});
+// show Urls
 app.get("/urls", (req, res) => {
   const user_id = req.session.user_id;
   const user = users[user_id];
 
   if (!user_id) {
-    return res.redirect("/login");
+    return res.send("You are not logged in go to Login page");
   } else {
     const templateVars = { urls: urlsForUser(user_id), user };
     res.render("urls_index", templateVars);
@@ -65,13 +67,20 @@ app.get("/urls", (req, res) => {
 
 app.get("/urls/new", (req, res) => {
   const user_id = req.session.user_id;
+  if(!user_id){
+    return res.redirect("/login");
+  }
   const user = users[user_id];
-  const templateVars = {
-    user: user,
-  };
-  res.render("urls_new", templateVars);
+    const templateVars = {
+      user: user,
+    };
+    res.render("urls_new", templateVars);
 });
 
+// a submit button which makes a POST request to /urls
+// if user is not logged in:
+// redirects to the /login page
+// Short url page where you can edit long URLs
 app.get("/urls/:shortURL", (req, res) => {
   const user_id = req.session.user_id;
   const shortURL = req.params.shortURL;
@@ -79,6 +88,10 @@ app.get("/urls/:shortURL", (req, res) => {
   if (!user_id) {
     return res.redirect("/login");
   }
+
+  // const manyurls =urlsForUser(user_id);
+  //   manyurls[shortURL];
+
   if (urlsForUser(user_id)[shortURL]) {
     const user = users[user_id];
     const templateVars = {
@@ -96,9 +109,11 @@ app.post("/urls", (req, res) => {
   const shortURL = generateRandomString();
   urlDatabase[shortURL] = {
     longURL: req.body.longURL,
-    user: req.session.user_id,
+    userID: req.session.user_id,
   };
-  res.redirect("/urls/");
+  console.log("user id", req.session.user_id);
+  res.redirect(`/urls/${shortURL}`);
+  // res.redirect("/urls/");
 });
 
 app.get("/u/:shortURL", (req, res) => {
@@ -152,6 +167,7 @@ app.get("/u/:shortURL", (req, res) => {
           user: null,
         }
         res.render( 'login', templateVars); 
+
       });
       
       //Post login
@@ -176,10 +192,10 @@ app.get("/u/:shortURL", (req, res) => {
       });
       
       
-      app.post("/logout",(req,res)=>{ 
-        res.clearCookie("user_id");  
-        res.redirect('/urls');
-      });
+      app.post("/logout", (req, res) => {
+        req.session=null;
+        res.redirect("/login");
+      })
       
       
       
@@ -212,7 +228,6 @@ app.get("/u/:shortURL", (req, res) => {
           email: newEmail,
           password: hashedPassword
         };
-        
         users[newId]= newuser;
         req.session.user_id= newuser.id;
         res.redirect('/urls');
@@ -225,7 +240,6 @@ app.get("/u/:shortURL", (req, res) => {
       app.listen(PORT, () => {
         console.log(`Example app listening on port ${PORT}!`);
       });
-
 
 
 
